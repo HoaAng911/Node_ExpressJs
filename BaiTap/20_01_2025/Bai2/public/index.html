@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tra cứu biển số xe</title>
+  <style>
+    body {
+      font-family: 'Roboto', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      color: #007BFF;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 1rem;
+      color: #555;
+      margin-bottom: 20px;
+    }
+
+    select {
+      padding: 10px 15px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      outline: none;
+      margin-bottom: 20px;
+      width: 250px;
+      box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    select:focus {
+      border-color: #007BFF;
+      box-shadow: 0px 2px 5px rgba(0, 123, 255, 0.5);
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      background-color: #007BFF;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0px 3px 5px rgba(0, 123, 255, 0.3);
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      background-color: #004085;
+      transform: translateY(1px);
+    }
+
+    .result, .error {
+      font-size: 1.2rem;
+      margin-top: 20px;
+      padding: 10px 15px;
+      border-radius: 5px;
+      display: inline-block;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+
+    .result {
+      background-color: #e6f7ff;
+      color: #007BFF;
+      border: 1px solid #007BFF;
+    }
+
+    .error {
+      background-color: #ffe6e6;
+      color: #ff4d4d;
+      border: 1px solid #ff4d4d;
+    }
+
+    footer {
+      font-size: 0.9rem;
+      color: #777;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tra cứu biển số xe</h1>
+  <h2>Hello, I'm a Node.js server for searching vehicle plate numbers!</h2>
+
+  <!-- Dropdown để chọn tỉnh -->
+  <select id="provinceSelect">
+    <option value="" disabled selected>Chọn tỉnh</option>
+  </select>
+
+  <!-- Nút tra cứu -->
+  <button id="lookupButton">Tra cứu</button>
+
+  <!-- Hiển thị kết quả -->
+  <div id="result" class="result"></div>
+  <div id="error" class="error"></div>
+
+  <footer>&copy; 2025 Tra cứu biển số xe</footer>
+
+  <script>
+    const provinceSelect = document.getElementById('provinceSelect');
+    const resultDiv = document.getElementById('result');
+    const errorDiv = document.getElementById('error');
+    const lookupButton = document.getElementById('lookupButton');
+  
+    // Ẩn các phần tử result và error khi khởi tạo
+    resultDiv.style.display = 'none';
+    errorDiv.style.display = 'none';
+  
+    // Tải danh sách tỉnh từ server và hiển thị trong dropdown
+    async function loadProvinces() {
+      try {
+        const response = await fetch('/api/provinces');
+        const provinces = await response.json();
+        provinces.forEach(province => {
+          const option = document.createElement('option');
+          option.value = province;
+          option.textContent = province;
+          provinceSelect.appendChild(option);
+        });
+      } catch (error) {
+        errorDiv.textContent = 'Không thể tải danh sách tỉnh.';
+        errorDiv.style.display = 'block'; // Hiển thị lỗi
+        console.error(error);
+      }
+    }
+  
+    // Gửi yêu cầu tra cứu biển số xe
+    async function lookupPlate() {
+      const province = provinceSelect.value;
+      if (!province) {
+        errorDiv.textContent = 'Vui lòng chọn tỉnh.';
+        errorDiv.style.display = 'block';
+        resultDiv.style.display = 'none';
+        return;
+      }
+      try {
+        const response = await fetch(`/api/plate?province=${encodeURIComponent(province)}`);
+        const data = await response.json();
+        if (data.plate) {
+          resultDiv.textContent = `Biển số xe: ${data.plate}`;
+          resultDiv.style.display = 'block';
+          errorDiv.style.display = 'none';
+        } else {
+          resultDiv.style.display = 'none';
+          errorDiv.textContent = 'Không tìm thấy biển số xe.';
+          errorDiv.style.display = 'block';
+        }
+      } catch (error) {
+        resultDiv.style.display = 'none';
+        errorDiv.textContent = 'Có lỗi xảy ra khi tra cứu.';
+        errorDiv.style.display = 'block';
+        console.error(error);
+      }
+    }
+  
+    // Gọi hàm khi tải trang
+    loadProvinces();
+  
+    // Lắng nghe sự kiện nút bấm
+    lookupButton.addEventListener('click', lookupPlate);
+  </script>
+  
+</body>
+</html>
